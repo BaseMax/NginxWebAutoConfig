@@ -46,11 +46,7 @@ $domains[]=[
 ];
 // asrez.com,www.asrez.com,service.asrez.com
 // aterd.com,www.aterd.com,server.aterd.com,panel.aterd.com,net.aterd.com,mail.aterd.com
-// iapk.org,www.iapk.org
 // onelang.org, www.onelang.org
-// onelang.ir, www.onelang.ir
-// nalimail.com, www.nalimail.com
-// kafital.ir,www.kafital.ir
 foreach($domains as $domain) {
 	setConfig($domain);
 }
@@ -65,12 +61,16 @@ return "	location ~ \.php\$ {
 }
 function setConfigSub($domain, $subdomain) {
 	$domain["subdomains"]=[];
+	$domain["domainDirectory"]=$domain["name"]. "/sub-". $subdomain;
 	$domain["sslDomainDirectory"]=$domain["name"];
 	$domain["name"]=$subdomain.".".$domain["name"];
 	$domain["www"]=false;
 	setConfig($domain);
 }
 function setConfig($domain) {
+	if(!isset($domain["domainDirectory"])) {
+		$domain["domainDirectory"]=$domain["name"]."/root";
+	}
 	if(!isset($domain["sslDomainDirectory"])) {
 		$domain["sslDomainDirectory"]=$domain["name"];
 	}
@@ -92,7 +92,7 @@ else {
 $config.="	server_name ".$domain["name"].";
 ";
 }
-$config.="	root   /site/".$domain["name"]."/root;
+$config.="	root   /site/".$domain["domainDirectory"].";
 ";
 	if(isset($domain["ssl"]) and $domain["ssl"] == true) {
 $config.="	return 301 https://".$domain["name"]."\$request_uri;
@@ -132,7 +132,7 @@ $config.="server {
 	#domain
 	server_name ".$domain["name"].";
 	#config
-	root   /site/".$domain["name"]."/root;
+	root   /site/".$domain["domainDirectory"].";
 	index  index.htm index.html index.php;
 ";
 if(isset($domain["php"]) and $domain["php"] == false) {}
