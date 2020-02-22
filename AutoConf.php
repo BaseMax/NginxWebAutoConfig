@@ -69,17 +69,6 @@ function setConfigSub($domain, $subdomain) {
 	$domain["name"]=$subdomain.".".$domain["name"];
 	$domain["www"]=false;
 	setConfig($domain);
-// $config="server {
-// 	#port
-// 	listen 80;
-// 	#domain
-// 	server_name ".$subdomain.".".$domain["name"].";
-// 	root   /site/".$domain["name"]."/sub-".$subdomain.";
-// ";
-// $config.=supportPHP();
-// $config.="}
-// ";
-// 	file_put_contents("/etc/nginx/conf.d/subdomains/$subdomain.".$domain["name"].".conf", $config);
 }
 function setConfig($domain) {
 	if(!isset($domain["sslDomainDirectory"])) {
