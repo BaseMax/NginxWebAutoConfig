@@ -65,9 +65,9 @@ return "	location ~ \.php\$ {
 }
 function setConfigSub($domain, $subdomain) {
 	$domain["subdomains"]=[];
+	$domain["sslDomainDirectory"]=$domain["name"];
 	$domain["name"]=$subdomain.".".$domain["name"];
 	$domain["www"]=false;
-	$domain["sslDomainDirectory"]=$domain["name"];
 	setConfig($domain);
 // $config="server {
 // 	#port
