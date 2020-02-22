@@ -14,6 +14,16 @@ $ php AutoConf.php
 $ sudo service nginx restart / sudo systemctl restart nginx
 ```
 
+## Featues
+
+- Support HTTPS, HTTP2
+- Support www.
+- Redirect all `http` requests to `https`
+- Redirect all `www` requests to `non-www`
+- Support Subdodmains
+- Support PHP-fpm
+- Support Nginx proxy (e.g: for nodejs)
+
 ---------
 
 # Max Base
