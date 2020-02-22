@@ -44,7 +44,13 @@ $domains[]=[
 	"www"=>true,
 	"ssl"=>false,
 ];
+// asrez.com,www.asrez.com,service.asrez.com
 // aterd.com,www.aterd.com,server.aterd.com,panel.aterd.com,net.aterd.com,mail.aterd.com
+// iapk.org,www.iapk.org
+// onelang.org, www.onelang.org
+// onelang.ir, www.onelang.ir
+// nalimail.com, www.nalimail.com
+// kafital.ir,www.kafital.ir
 foreach($domains as $domain) {
 	setConfig($domain);
 }
@@ -58,6 +64,11 @@ return "	location ~ \.php\$ {
 ";
 }
 function setConfigSub($domain, $subdomain) {
+	$domain["subdomains"]=[];
+	$domain["name"]=$subdomain.".".$domain["name"];
+	$domain["www"]=false;
+	$domain["sslDomainDirectory"]=$domain["name"];
+	setConfig($domain);
 // $config="server {
 // 	#port
 // 	listen 80;
@@ -71,6 +82,9 @@ function setConfigSub($domain, $subdomain) {
 // 	file_put_contents("/etc/nginx/conf.d/subdomains/$subdomain.".$domain["name"].".conf", $config);
 }
 function setConfig($domain) {
+	if(!isset($domain["sslDomainDirectory"])) {
+		$domain["sslDomainDirectory"]=$domain["name"];
+	}
 	if(isset($domain["subdomains"]) and is_array($domain["subdomains"]) and count($domain["subdomains"]) > 0) {
 		foreach($domain["subdomains"] as $sub) {
 			setConfigSub($domain, $sub);
@@ -80,8 +94,16 @@ $config="server {
 	#port
 	listen 80;
 	#domain
-	server_name www.".$domain["name"]." ".$domain["name"].";
-	root   /site/".$domain["name"]."/root;
+";
+if($domain["www"] == true) {
+$config.="	server_name www.".$domain["name"]." ".$domain["name"].";
+";
+}
+else {
+$config.="	server_name ".$domain["name"].";
+";
+}
+$config.="	root   /site/".$domain["name"]."/root;
 ";
 	if(isset($domain["ssl"]) and $domain["ssl"] == true) {
 $config.="	return 301 https://".$domain["name"]."\$request_uri;
@@ -94,12 +116,13 @@ $config.=supportPHP();
 $config.="}
 ";
 if(isset($domain["ssl"]) and $domain["ssl"] == true) {
+if($domain["www"] == true) {
 $config.="server {
 	#port
 	listen 443 ssl;
 	#ssl
-	ssl_certificate /etc/letsencrypt/live/".$domain["name"]."/fullchain.pem;
-	ssl_certificate_key /etc/letsencrypt/live/".$domain["name"]."/privkey.pem;
+	ssl_certificate /etc/letsencrypt/live/".$domain["sslDomainDirectory"]."/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/".$domain["sslDomainDirectory"]."/privkey.pem;
 	include /etc/letsencrypt/options-ssl-nginx.conf;
 	ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 	#domain
@@ -107,12 +130,14 @@ $config.="server {
 
 	return 301 \$scheme://".$domain["name"]."\$request_uri;
 }
-server {
+";
+}
+$config.="server {
 	#port
 	listen 443 ssl;
 	#ssl
-	ssl_certificate /etc/letsencrypt/live/".$domain["name"]."/fullchain.pem;
-	ssl_certificate_key /etc/letsencrypt/live/".$domain["name"]."/privkey.pem;
+	ssl_certificate /etc/letsencrypt/live/".$domain["sslDomainDirectory"]."/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/".$domain["sslDomainDirectory"]."/privkey.pem;
 	include /etc/letsencrypt/options-ssl-nginx.conf;
 	ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 	#domain
