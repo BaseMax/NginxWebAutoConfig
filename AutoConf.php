@@ -1,7 +1,6 @@
 <?php
 // Max Base
 // https://github.com/BaseMax/NginxWebAutoConfig
-<?php
 // wget https://dl.eff.org/certbot-auto
 // sudo mv certbot-auto /usr/local/bin/certbot-auto
 // sudo chown root /usr/local/bin/certbot-auto
@@ -49,8 +48,34 @@ $domains[]=[
 foreach($domains as $domain) {
 	setConfig($domain);
 }
+function supportPHP() {
+return "	location ~ \.php\$ {
+		fastcgi_pass   127.0.0.1:9000;
+		fastcgi_index  index.php;
+		fastcgi_param  SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
+		include        fastcgi_params;
+	}
+";
+}
+function setConfigSub($domain, $subdomain) {
+// $config="server {
+// 	#port
+// 	listen 80;
+// 	#domain
+// 	server_name ".$subdomain.".".$domain["name"].";
+// 	root   /site/".$domain["name"]."/sub-".$subdomain.";
+// ";
+// $config.=supportPHP();
+// $config.="}
+// ";
+// 	file_put_contents("/etc/nginx/conf.d/subdomains/$subdomain.".$domain["name"].".conf", $config);
+}
 function setConfig($domain) {
-	setConfigSub($domain["subdomains"]);
+	if(isset($domain["subdomains"]) and is_array($domain["subdomains"]) and count($domain["subdomains"]) > 0) {
+		foreach($domain["subdomains"] as $sub) {
+			setConfigSub($domain, $sub);
+		}
+	}
 $config="server {
 	#port
 	listen 80;
@@ -62,6 +87,10 @@ $config="server {
 $config.="	return 301 https://".$domain["name"]."\$request_uri;
 ";
 	}
+if(isset($domain["php"]) and $domain["php"] == false) {}
+else if(!isset($domain["php"])) {
+$config.=supportPHP();
+}
 $config.="}
 ";
 if(isset($domain["ssl"]) and $domain["ssl"] == true) {
@@ -81,20 +110,20 @@ $config.="server {
 server {
 	#port
 	listen 443 ssl;
+	#ssl
+	ssl_certificate /etc/letsencrypt/live/".$domain["name"]."/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/".$domain["name"]."/privkey.pem;
+	include /etc/letsencrypt/options-ssl-nginx.conf;
+	ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 	#domain
 	server_name ".$domain["name"].";
 	#config
 	root   /site/".$domain["name"]."/root;
 	index  index.htm index.html index.php;
 ";
-if(!isset($domain["name"] || isset($domain["php"]) and $domain["php"] == false) {
-$config.="	location ~ \.php\$ {
-		fastcgi_pass   127.0.0.1:9000;
-		fastcgi_index  index.php;
-		fastcgi_param  SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
-		include        fastcgi_params;
-	}
-";
+if(isset($domain["php"]) and $domain["php"] == false) {}
+else if(!isset($domain["php"])) {
+$config.=supportPHP();
 }
 if(isset($domain["nodejs"]) and $domain["nodejs"] == false) {
 $config.="	location /test/ {
@@ -107,5 +136,5 @@ $config.="	location /test/ {
 $config.="}
 ";
 }
-	file_put_contents("/etc/nginx/conf.d/$domain.conf", $config);
+	file_put_contents("/etc/nginx/conf.d/".$domain["name"].".conf", $config);
 }
